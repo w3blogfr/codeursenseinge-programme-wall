@@ -1,0 +1,45 @@
+<html lang="fr">
+
+<head>
+  <script src="https://unpkg.com/vue"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="tweetjs.js"></script>
+  <script src="js-yaml.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="codeurs.css">
+  <meta charset="UTF-8">
+</head>
+<body>
+
+<script async src="http://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<div id="app">
+  <div class="slideshow" v-if="init">
+    
+    <div class="slide fade" v-show="currentSlide=='program'">
+		<h4 class="program-hour">{{ program.displayHour }}</h4>
+		<div class="program-talk" v-for="talk in program.displayTalks">
+			<div class="title">{{ talk.title }}</div>
+			<p class="authors">{{ talk.authors }}
+				<span v-for="(speaker, index) in talk.speakers">
+					<span v-if="index != 0">, </span><span>{{ speaker.displayName }}</span>
+				  </span>
+			</p>
+			<div class="room">Salle {{ talk.room }}</div>
+		</div>
+    </div>
+    <div class="slide" v-show="currentSlide=='sponsor'">
+		<p class="sponsor-img" v-if="sponsor.currentSponsor.logo!=null"><img :src="sponsor.currentSponsor.logo" /></p>
+    </div>
+	<div class="slide" v-show="currentSlide=='twitter'">
+		<div id="twitter-card"></div>
+    </div>
+  </div>
+  
+  <img src="codeurs-en-seine-logo.png" class="logo"/>
+</div>
+
+</body>
+
+
+  <script src="codeurs.js"></script>
+</html>
