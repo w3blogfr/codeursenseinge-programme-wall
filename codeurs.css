@@ -63,13 +63,17 @@ body{
 	max-height: 400px;
 }
 
-.sponsor-img{
-	text-align:center;
+.sponsor-slide{
+  display: flex; /* contexte sur le parent */
+  height:80%;
 }
 
-.sponsor-img img{
+.sponsor-img{
+	min-height:300px;
+	min-width:400px;
 	max-width: 600px;
 	max-height: 400px;
+	margin: auto;
 }
 
 .program-hour{

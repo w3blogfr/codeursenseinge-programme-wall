@@ -24,11 +24,11 @@
 					<span v-if="index != 0">, </span><span>{{ speaker.displayName }}</span>
 				  </span>
 			</p>
-			<div class="room">Salle {{ talk.room }}</div>
+			<div class="room" v-if="talk.room!=null">Salle {{ talk.room }}</div>
 		</div>
     </div>
-    <div class="slide" v-show="currentSlide=='sponsor'">
-		<p class="sponsor-img" v-if="sponsor.currentSponsor.logo!=null"><img :src="sponsor.currentSponsor.logo" /></p>
+    <div class="slide sponsor-slide" v-show="currentSlide=='sponsor'">
+		<img class="sponsor-img" :src="sponsor.currentSponsor.logo" v-if="sponsor.currentSponsor.logo!=null" />
     </div>
 	<div class="slide" v-show="currentSlide=='twitter'">
 		<div id="twitter-card"></div>
