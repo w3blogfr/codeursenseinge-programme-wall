@@ -5,6 +5,30 @@ function timeStringToFloat(time) {
   return parseFloat(hours + minutes / 60);
 }
 
+function compareValues(key, order='asc') {
+  return function(a, b) {
+    if(!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+      // property doesn't exist on either object
+      return 0;
+    }
+
+    const varA = (typeof a[key] === 'string') ?
+      a[key].toUpperCase() : a[key];
+    const varB = (typeof b[key] === 'string') ?
+      b[key].toUpperCase() : b[key];
+
+    let comparison = 0;
+    if (varA > varB) {
+      comparison = 1;
+    } else if (varA < varB) {
+      comparison = -1;
+    }
+    return (
+      (order == 'desc') ? (comparison * -1) : comparison
+    );
+  };
+}
+
 var app = new Vue({
   el: '#app',
   data: {
@@ -29,7 +53,7 @@ var app = new Vue({
 	},
 	program: {
 		talks:[],
-		talksPerHour: {},
+		talksPerHour: [],
 		nextTalkDelayMinutes:10,
 		currentTalks:[],
 		nextTalks:[],
@@ -116,15 +140,29 @@ var app = new Vue({
 					return newTalk;
 				});
 				
-				var talksPerHour={};
+				var talksPerHourMap={};
 				this.program.talks.forEach(function(talk){
 					var h=timeStringToFloat(talk.hour);
-					if(!talksPerHour[h]){
-						talksPerHour[h]=[];
+					if(!talksPerHourMap[h]){
+						talksPerHourMap[h]=[];
 					}
-					talksPerHour[h].push(talk);
+					talksPerHourMap[h].push(talk);
 				});
-				this.program.talksPerHour=talksPerHour;
+				
+				//Le résultat est une liste ordonnée des talks par heure
+				this.program.talksPerHour=[];
+				Object.entries(talksPerHourMap).sort(function(a, b) {
+					return a[0] - b[0];
+				}).forEach((element) => {
+					var talksSorted=element[1];
+					talksSorted.sort(compareValues('room'));
+					this.program.talksPerHour.push({
+						hour: element[0],
+						talks: talksSorted
+					
+					})
+				});
+				
 			});
 	   },
 	   showSponsor(){
@@ -142,22 +180,18 @@ var app = new Vue({
 			var currentTalks=[];
 			var nextTalks=[];
 			
-			var list=Object.entries(this.program.talksPerHour).sort(function(a, b) {
-				return a[0] - b[0];
-			});
-			
-			for (const [ hTalks, talks ] of list) {
-				if(currentHour<hTalks && (currentHour+this.program.nextTalkDelayMinutes/60>hTalks)){
+			this.program.talksPerHour.forEach((slot) => {
+				if(currentHour<slot.hour && (currentHour+this.program.nextTalkDelayMinutes/60>slot.hour)){
 					//Prochain talk dans n minutes
-					nextTalks=talks;
-				}else if(currentHour>=hTalks){
+					nextTalks=slot.talks;
+				}else if(currentHour>=slot.hour){
 					//Talk en cours
-					currentTalks=talks;
+					currentTalks=slot.talks;
 				}else if(nextTalks.length==00 && currentTalks.length==0){
 					//Premier talk de la journée
-					nextTalks=talks;
+					nextTalks=slot.talks;
 				}
-			}
+			});
 			this.program.displayTalks=nextTalks.length>0 ? nextTalks : currentTalks;
 			this.program.displayHour=this.program.displayTalks[0].hour;
 			
