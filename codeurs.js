@@ -52,16 +52,17 @@ var app = new Vue({
 		currentSponsor: {},
 	},
 	program: {
+		title: "En cours",
 		talks:[],
 		talksPerHour: [],
-		nextTalkDelayMinutes:10,
+		nextTalkDelayMinutes:30,
 		currentTalks:[],
 		nextTalks:[],
 		displayTalks:[],
 		displayHour:0,
 	},
 	slideFunctions: ['showProgramme','showSponsor','showTwitter'],
-	slideTimer: [15000,10000,15000],
+	slideTimer: [20000,10000,15000],
 	slideTimeout: null
   },
   methods: {
@@ -144,10 +145,12 @@ var app = new Vue({
 				var talksPerHourMap={};
 				this.program.talks.forEach(function(talk){
 					var h=timeStringToFloat(talk.hour);
-					if(!talksPerHourMap[h]){
-						talksPerHourMap[h]=[];
+					if(talk.title!="Pause"){
+						if(!talksPerHourMap[h]){
+							talksPerHourMap[h]=[];
+						}
+						talksPerHourMap[h].push(talk);
 					}
-					talksPerHourMap[h].push(talk);
 				});
 				
 				//Le résultat est une liste ordonnée des talks par heure
@@ -193,8 +196,17 @@ var app = new Vue({
 					nextTalks=slot.talks;
 				}
 			});
-			this.program.displayTalks=nextTalks.length>0 ? nextTalks : currentTalks;
-			this.program.displayHour=this.program.displayTalks[0].hour;
+			this.program.displayTalks=currentTalks;
+			this.program.displayHour=this.program.displayTalks.length > 0 ? this.program.displayTalks[0].hour : '';
+			this.program.title = "En cours";
+			
+			if(nextTalks.length>0){
+				setTimeout(() => {
+					this.program.displayTalks=nextTalks;
+					this.program.displayHour=this.program.displayTalks[0].hour;
+					this.program.title = "A venir";
+				},5000);
+			}
 			
 			this.currentSlide='program';
 	   },

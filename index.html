@@ -16,6 +16,7 @@
   <div class="slideshow" v-if="init">
     
     <div class="slide fade" v-show="currentSlide=='program'">
+		<h3 class="programme-title">{{ program.title }}</h3>
 		<h4 class="program-hour">{{ program.displayHour }}</h4>
 		<div class="program-talk" v-for="talk in program.displayTalks">
 			<div class="title">{{ talk.title }}</div>
