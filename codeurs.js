@@ -116,6 +116,7 @@ var app = new Vue({
 			})
 	   },
 	   loadProgramme(){
+		   console.log('loadProgramme');
 			var that=this;
 			return Promise.all([
 				axios.get(`https://raw.githubusercontent.com/CodeursEnSeine/CodeursEnSeine-app/master/public/program.json`),
@@ -223,5 +224,7 @@ var app = new Vue({
 		.then(() => {
 			this.moveNextSlide();
 		});
+	
+	setInterval(this.loadProgramme, 600000);
   },
 })
