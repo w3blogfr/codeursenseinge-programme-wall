@@ -29,6 +29,18 @@ function compareValues(key, order='asc') {
   };
 }
 
+String.prototype.toCapital = function() {
+	let str = this
+	let splittedStr = str.split(" ") // returns an array
+	let array = [] // creates a array that will be used as output
+	let finalStr = "" // the output string
+	splittedStr.forEach(function(e) { array.push(e[0].toUpperCase() + e.slice(1, e.length))})  
+  
+	finalStr = array.join(" ") // divide the array elements and join them separated by " "s
+	
+	return finalStr
+}
+
 var app = new Vue({
   el: '#app',
   data: {
@@ -86,25 +98,92 @@ var app = new Vue({
 	   },
 	   loadSponsors(){
 		   var that=this;
-		   return axios.get('https://raw.githubusercontent.com/CodeursEnSeine/CodeursEnSeine-site/gh-pages/_data/edition2019/sponsors.yml')
-			.then(function (data) {
-			  that.sponsor.sponsors=jsyaml.load(data.data).map(function(obj){
-					//On préload les images
+		   return axios.get('https://api.github.com/repos/w3blogfr/codeursenseinge-programme-wall/contents/sponsors')
+			.then(function (response) {
+				var sponsors=[];
+				response.data.forEach(file => {
 					var img=new Image();
-					img.src=that.sponsor.sponsorUrlPrefix+obj.logo;
-					//On map l'object retourné
-					return {
-					 name: obj.name,
-					 logo: that.sponsor.sponsorUrlPrefix+obj.logo
-					}
-			  });
-			})
+					img.src=file.download_url;
+					sponsors.push({
+						name: file.name,
+						logo: file.download_url
+					})
+				});
+				that.sponsor.sponsors=sponsors;
+			});
+	   },
+	   parseMdx(text){
+		var values={};
+		var content=null;
+		var nbDashSeparator=0;
+		var lines=text.split("\n");
+		var i=0;
+
+		// On match les clés simples
+		Array.from(text.matchAll (/(\w{1,}): "?([^"\n]*)"?/gi))
+			.forEach( m => {
+				values[m[1]]=m[2];
+			});
+		// On match les liste
+		Array.from(text.matchAll (/(\w{1,}):\n((?:  - (?:.*)\n)+)/gi))
+			.forEach( m => {
+				var multiValues=m[2].split("\n")
+				.filter( line => line.indexOf('-')>0)
+				.map(line => {
+					return line.replace('  - ','');
+				})
+				values[m[1]]=multiValues;
+			});
+
+		return {
+			values: values,
+			content: content
+		}
 	   },
 	   loadProgramme(){
 		   console.log('loadProgramme');
 			var that=this;
+
+			return axios.get('https://api.github.com/repos/CodeursEnSeine/codeursenseine.com/contents/content/conferences')
+				.then(function (response) {
+					var downloadUrls = response.data.map(x => x.download_url);
+					
+					var axiosPromises=[];
+					downloadUrls.forEach(element => {
+						axiosPromises.push(axios.get(element));
+					});
+					var talks=[];
+					return Promise.all(axiosPromises).then(responses => { 
+						var id=1;
+						responses
+							.map(response => response.data)
+							.map(data => {
+								var mdx=that.parseMdx(data);
+								var minutes=new Date(mdx.values['start']).getMinutes();
+								if(minutes<10){
+									minutes='0'+minutes;
+								}
+
+								var talk={
+									id: id++,
+									title: mdx.values['title'],
+									type: mdx.values['type'],
+									room: mdx.values['room'],
+									speakers: mdx.values['speakers']!=null ? mdx.values['speakers'].map(t => { 
+										return {'identifier': t, 'displayName': t.replace('-',' ').toCapital()}
+									}) : [],
+									hour: new Date(mdx.values['start']).getHours()+':'+minutes
+								}
+								talks.push(talk);
+							});
+
+							that.program.talks=talks;
+							that.prepareTalkPerHour();
+					})
+				})
+/*
 			return Promise.all([
-				axios.get(`https://raw.githubusercontent.com/CodeursEnSeine/CodeursEnSeine-app/master/public/program.json`),
+				axios.get(`https://api.github.com/repos/CodeursEnSeine/codeursenseine.com/contents/content/conferences`),
 				axios.get(`https://blog.yoannfleury.dev/conference-hall-fetch/confs.json`)
 			]).then(([program, confs]) => { 
 			
@@ -126,31 +205,33 @@ var app = new Vue({
 					return newTalk;
 				});
 				
-				var talksPerHourMap={};
-				this.program.talks.forEach(function(talk){
-					var h=timeStringToFloat(talk.hour);
-					if(talk.title!="Pause"){
-						if(!talksPerHourMap[h]){
-							talksPerHourMap[h]=[];
-						}
-						talksPerHourMap[h].push(talk);
+			});
+			*/
+	   },
+	   prepareTalkPerHour(){
+			var talksPerHourMap={};
+			this.program.talks.forEach(function(talk){
+				var h=timeStringToFloat(talk.hour);
+				if(talk.title!="Pause"){
+					if(!talksPerHourMap[h]){
+						talksPerHourMap[h]=[];
 					}
-				});
+					talksPerHourMap[h].push(talk);
+				}
+			});
+			
+			//Le résultat est une liste ordonnée des talks par heure
+			this.program.talksPerHour=[];
+			Object.entries(talksPerHourMap).sort(function(a, b) {
+				return a[0] - b[0];
+			}).forEach((element) => {
+				var talksSorted=element[1];
+				talksSorted.sort(compareValues('room'));
+				this.program.talksPerHour.push({
+					hour: element[0],
+					talks: talksSorted
 				
-				//Le résultat est une liste ordonnée des talks par heure
-				this.program.talksPerHour=[];
-				Object.entries(talksPerHourMap).sort(function(a, b) {
-					return a[0] - b[0];
-				}).forEach((element) => {
-					var talksSorted=element[1];
-					talksSorted.sort(compareValues('room'));
-					this.program.talksPerHour.push({
-						hour: element[0],
-						talks: talksSorted
-					
-					})
-				});
-				
+				})
 			});
 	   },
 	   showSponsor(){
@@ -163,6 +244,7 @@ var app = new Vue({
 	   showProgramme(){
 			var date=new Date();
 			var currentHour=date.getHours()+date.getMinutes()/60;
+			console.log('currentHour : '+currentHour);
 			//var currentHour=9.84; //Decomment for test
 			
 			var currentTalks=[];
