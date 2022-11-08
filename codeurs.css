@@ -44,6 +44,13 @@ body{
   to {opacity: 1}
 }
 
+.twitter-iframe{
+  border: 0;
+  margin: auto;
+  width: 700px;
+  display: block;
+}
+
 .twitter-card{
 	
 }

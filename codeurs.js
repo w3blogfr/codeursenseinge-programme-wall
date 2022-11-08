@@ -84,22 +84,6 @@ var app = new Vue({
 				this.init=true;
 			});
 	   },
-	   refreshTwitter(){
-		   var that=this;
-		   TweetJs.ListTweetsOnUserTimeline("codeursenseine",function (data) {
-		   if(data.length>0){			   
-			   for(var i=0;i<data.length;i++){
-					var tweet=data[i];
-					if(tweet.id_str!=that.twitter.lastId){
-						that.twitter.tweets.unshift(tweet.id_str);
-					}else{
-						break;
-					}
-			   }
-			   that.twitter.lastId=data[0].id_str;
-		   }
-		});
-	   },
 	   loadSponsors(){
 		   var that=this;
 		   return axios.get('https://raw.githubusercontent.com/CodeursEnSeine/CodeursEnSeine-site/gh-pages/_data/edition2019/sponsors.yml')
@@ -212,6 +196,15 @@ var app = new Vue({
 	   },
 	   showTwitter(){
 			var that=this;
+			
+			document.getElementById('twitter-iframe').src='';
+			document.getElementById('twitter-iframe').src='twitter.html';
+			//that.currentSlide='twitter';
+			setTimeout(function(){
+				that.currentSlide='twitter';
+			},4000);
+
+			/*
 			if(that.twitter.tweets.length>0){
 				document.getElementById('twitter-card').innerHTML = '';
 				twttr.widgets.createTweet(
@@ -227,10 +220,10 @@ var app = new Vue({
 				//On supprime le premier
 				that.twitter.tweets.splice(0,1);
 			}
+			*/
 	   }
    },
   created () {
-	this.refreshTwitter();
     this.timerTwitter = setInterval(this.moveNextSlide, 60000);
 	this.loadResources()
 		.then(() => {

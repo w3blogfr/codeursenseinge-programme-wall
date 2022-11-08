@@ -1,17 +1,14 @@
 <html lang="fr">
 
 <head>
-  <script src="https://unpkg.com/vue"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <script src="tweetjs.js"></script>
   <script src="js-yaml.min.js"></script>
   <link rel="stylesheet" type="text/css" href="codeurs.css">
   <meta charset="UTF-8">
 </head>
 <body>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
+	
 <div id="app">
   <div class="slideshow" v-if="init">
     
@@ -32,7 +29,7 @@
 		<img class="sponsor-img" :src="sponsor.currentSponsor.logo" v-if="sponsor.currentSponsor.logo!=null" />
     </div>
 	<div class="slide" v-show="currentSlide=='twitter'">
-		<div id="twitter-card"></div>
+		<iframe id="twitter-iframe" src="twitter.html" width="600px" height="500px" class="twitter-iframe"></iframe>
     </div>
   </div>
   
